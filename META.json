@@ -1,5 +1,5 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "A role to process non-blocking requests in a rate-limiting queue.",
    "author" : [
       "Dotan Dimet <dotan@corky.net>"
    ],
@@ -52,6 +52,17 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/dotandimet/Mojo-UserAgent-Role-Queued/issues"
+      },
+      "homepage" : "https://github.com/dotandimet/Mojo-UserAgent-Role-Queued",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/dotandimet/Mojo-UserAgent-Role-Queued.git",
+         "web" : "https://github.com/dotandimet/Mojo-UserAgent-Role-Queued"
+      }
+   },
    "version" : "0.01",
    "x_serialization_backend" : "JSON::PP version 2.27400_02"
 }
