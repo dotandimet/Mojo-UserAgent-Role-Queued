@@ -50,4 +50,12 @@ for my $d (1 .. 4) {
 }
 $ua->on('stop_queue' => sub { Mojo::IOLoop->stop });
 Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+# What about promises?
+my @p;
+for my $n (2,1) {
+push @p, $ua->get_p("/wait/$n")->then(sub { is(pop->res->body, "Delayed by $n seconds") })->catch(sub { die "ERROR", $@ });
+}
+Mojo::Promise->all(@p)->wait;
+
 done_testing();
