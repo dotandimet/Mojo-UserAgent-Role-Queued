@@ -98,6 +98,8 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
 
 Mojo::UserAgent::Role::Queued manages all non-blocking requests made through L<Mojo::UserAgent> in a queue to limit the number of simultaneous requests.
 
+B<THIS IS AN INITIAL RELEASE>.
+
 L<Mojo::UserAgent> can make multiple concurrent non-blocking HTTP requests using Mojo's event loop, but because there is only a single process handling all of them, you must take care to limit the number of simultaneous requests you make.
 
 Some discussion of this issue is available here
