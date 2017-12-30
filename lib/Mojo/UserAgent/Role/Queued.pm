@@ -4,42 +4,35 @@ use Scalar::Util 'weaken';
 
 our $VERSION = "0.01";
 
-has jobs           => sub { [] };
-has timer          => undef;
-has queue_max_size => sub { shift->max_connections };
+has max_active => sub { shift->max_connections };
 has active         => 0;
-
-use constant DEBUG => $ENV{MOJO_USERAGENT_ROLE_QUEUED_DEBUG} || 0;
 
 around start => sub {
   my ($orig, $self, $tx, $cb) = @_;
   if ($cb) {
-    push @{$self->jobs}, {tx => $tx, cb => $cb};
-    $self->_start_queue($orig);
+    $self->_start_queue($orig, {tx => $tx, cb => $cb});
   }
   else {
-    return $orig->($self, $tx); # Blocking skip the queue
+    return $orig->($self, $tx); # Blocking calls skip the queue
   }
 };
 
 sub _start_queue {
-  my ($self, $original_start) = @_;
-  return $self if ($self->timer);
+  my ($self, $original_start, $job) = @_;
+  $self->{'jobs'} ||= [];
+  push @{$self->{'jobs'}, $job;
   my $this = $self;
   weaken $this;
   my $orig = $original_start;
   weaken $orig;
-  my $id = Mojo::IOLoop->recurring(0 => sub { $this->_process($orig); });
-  $self->timer($id);
-#  Mojo::IOLoop->start unless Mojo::IOLoop->is_running; # or the queue won't start...
+  $self->{'timer'} = Mojo::IOLoop->recurring(0 => sub { $this->_process($orig); });
 }
 
 sub _stop_queue {
   my ($self) = @_;
-  if ($self->timer) {
-    print STDERR "Stopping...\n" if (DEBUG);
-    Mojo::IOLoop->remove($self->timer);
-    $self->timer(undef);
+  if ($self->{'timer'}) {
+    Mojo::IOLoop->remove($self->{'timer'});
+    $self->{'timer'} = undef;
   }
   return $self;
 }
@@ -49,8 +42,8 @@ sub _process {
   state $start //= $original_start;
 
   # we have jobs and can run them:
-  while ($self->active < $self->queue_max_size
-    and my $job = shift @{$self->jobs})
+  while ($self->active < $self->max_active
+    and my $job = shift @{$self->{'jobs'}})
   {
     my ($tx, $cb) = ($job->{tx}, $job->{cb});
     $self->active($self->active + 1);
@@ -62,7 +55,7 @@ sub _process {
                     $ua->_process();
         });
   }
-  if (scalar @{$self->jobs} == 0 && $self->active == 0) {
+  if (scalar @{$self->{'jobs'}} == 0 && $self->active == 0) {
     $self->emit('stop_queue');
     $self->_stop_queue();    # the timer shouldn't run STAM.
   }
@@ -71,7 +64,6 @@ sub _process {
 before DESTROY => sub {
   my ($self) = shift;
   $self->_stop_queue();
-  $self->jobs(undef);
 };
 
 
@@ -90,7 +82,7 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
 
     my $ua = Mojo::UserAgent->new->with_role('+Queued');
     $ua->max_redirects(3);
-    $ua->queue_max_size(5); # process up to 5 requests at a time
+    $ua->max_active(5); # process up to 5 requests at a time
     for my $url (@big_list_of_urls) {
     $ua->get($url, sub {
             my ($ua, $tx) = @_;
@@ -115,10 +107,34 @@ L<http://stackoverflow.com/questions/15152633/perl-mojo-and-json-for-simultaneou
 
 L<Mojo::UserAgent::Role::Queued> tries to generalize the practice of managing a large number of requests using a queue, by embedding the queue inside L<Mojo::UserAgent> itself.
 
+=head1 EVENTS
+
+L<Mojo::UserAgent::Role::Queued> adds the following event to those emitted by L<Mojo::UserAgent>:
+
+=head2 stop_queue
+
+  $ua->on(stop_queue => sub { my ($ua) = @_; .... })
+
+Emitted when the queue has been emptied of all pending jobs.
+
 =head1 ATTRIBUTES
 
 L<Mojo::UserAgent::Role::Queued> has the following attributes:
 
+=head2 active
+
+    print "Number of jobs running is: ", $ua->active;
+
+Current number of active non-blocking transactions being processed.
+
+=head2 max_active
+
+    $ua->max_active(5);  # execute no more than 5 transactions at a time.
+    print "Execute no more than ", $ua->max_active, " concurrent transactions"
+
+Parameter controlling the maximum number of transactions that can be active at the same time.
+
+=head2 
 
 =head1 LICENSE
 
