@@ -19,8 +19,7 @@ get '/wait/:delay' => [delay => qr/\d/] => sub {
 my $ua = Mojo::UserAgent->new
                         ->with_roles('+Queued');
 
-is(ref $ua->jobs, 'ARRAY', 'UA has queue');
-is($ua->queue_max_size, $ua->max_connections);
+is($ua->max_active, $ua->max_connections, 'UA has max_active attribute');
 
 # relative urls will be fetched from the Mojolicious::Lite app defined above
 $ua->server->app(app);
@@ -42,10 +41,6 @@ Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 for my $d (1 .. 4) {
     $ua->get("/wait/$d" => sub {
         is(pop->res->body, "Delayed by $d seconds");
-        if ($d == 4) {
-            diag("The last one, Guvnor");
-#            Mojo::IOLoop->stop;
-        }
     });
 }
 $ua->on('stop_queue' => sub { Mojo::IOLoop->stop });

@@ -20,7 +20,7 @@ around start => sub {
 sub _start_queue {
   my ($self, $original_start, $job) = @_;
   $self->{'jobs'} ||= [];
-  push @{$self->{'jobs'}, $job;
+  push @{$self->{'jobs'}}, $job;
   my $this = $self;
   weaken $this;
   my $orig = $original_start;

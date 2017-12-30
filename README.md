@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/dotandimet/Mojo-UserAgent-Role-Queued.svg?branch=master)](https://travis-ci.org/dotandimet/Mojo-UserAgent-Role-Queued)
 # NAME
 
 Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rate-limiting queue.
@@ -8,7 +9,7 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
 
        my $ua = Mojo::UserAgent->new->with_role('+Queued');
        $ua->max_redirects(3);
-       $ua->queue_max_size(5); # process up to 5 requests at a time
+       $ua->max_active(5); # process up to 5 requests at a time
        for my $url (@big_list_of_urls) {
        $ua->get($url, sub {
                my ($ua, $tx) = @_;
@@ -33,9 +34,34 @@ and in Joel Berger's answer here:
 
 [Mojo::UserAgent::Role::Queued](https://metacpan.org/pod/Mojo::UserAgent::Role::Queued) tries to generalize the practice of managing a large number of requests using a queue, by embedding the queue inside [Mojo::UserAgent](https://metacpan.org/pod/Mojo::UserAgent) itself.
 
+# EVENTS
+
+[Mojo::UserAgent::Role::Queued](https://metacpan.org/pod/Mojo::UserAgent::Role::Queued) adds the following event to those emitted by [Mojo::UserAgent](https://metacpan.org/pod/Mojo::UserAgent):
+
+## stop\_queue
+
+    $ua->on(stop_queue => sub { my ($ua) = @_; .... })
+
+Emitted when the queue has been emptied of all pending jobs.
+
 # ATTRIBUTES
 
 [Mojo::UserAgent::Role::Queued](https://metacpan.org/pod/Mojo::UserAgent::Role::Queued) has the following attributes:
+
+## active
+
+    print "Number of jobs running is: ", $ua->active;
+
+Current number of active non-blocking transactions being processed.
+
+## max\_active
+
+    $ua->max_active(5);  # execute no more than 5 transactions at a time.
+    print "Execute no more than ", $ua->max_active, " concurrent transactions"
+
+Parameter controlling the maximum number of transactions that can be active at the same time.
+
+## 
 
 # LICENSE
 
