@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/dotandimet/Mojo-UserAgent-Role-Queued.svg?branch=master)](https://travis-ci.org/dotandimet/Mojo-UserAgent-Role-Queued)
+[![Build Status](https://travis-ci.org/dotandimet/Mojo-UserAgent-Role-Queued.svg?branch=master)](https://travis-ci.org/dotandimet/Mojo-UserAgent-Role-Queued) [![MetaCPAN Release](https://badge.fury.io/pl/Mojo-UserAgent-Role-Queued.svg)](https://metacpan.org/release/Mojo-UserAgent-Role-Queued)
 # NAME
 
 Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rate-limiting queue.
