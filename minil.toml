@@ -1,4 +1,4 @@
 name = "Mojo-UserAgent-Role-Queued"
-badges = ["travis"]
+badges = ["travis", "metacpan"]
 module_maker="ModuleBuildTiny"
 
