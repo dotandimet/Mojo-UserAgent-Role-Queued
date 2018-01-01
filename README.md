@@ -18,7 +18,13 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
                      $tx->res->dom->at('title')->text;
                }
               });
-      }
+      };
+      # works with promises, too:
+     my @p = map {
+       $ua->get_p($_)->then(sub { pop->res->dom->at('title')->text })
+         ->catch(sub { say "Error: ", @_ })
+     } @big_list_of_urls;
+      Mojo::Promise->all(@p)->wait;
     
 
 # DESCRIPTION
@@ -49,12 +55,6 @@ Emitted when the queue has been emptied of all pending jobs.
 # ATTRIBUTES
 
 [Mojo::UserAgent::Role::Queued](https://metacpan.org/pod/Mojo::UserAgent::Role::Queued) has the following attributes:
-
-## active
-
-    print "Number of jobs running is: ", $ua->active;
-
-Current number of active non-blocking transactions being processed.
 
 ## max\_active
 
