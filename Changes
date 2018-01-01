@@ -2,6 +2,11 @@ Revision history for Perl extension Mojo-UserAgent-Role-Queued
 
 {{$NEXT}}
 
+    - refactor internals, replace timer with events 
+    - remove attribute "active"
+    - updated required perl version
+    - mention promises in synopsis
+
 0.03 2018-01-01T14:07:28Z
 
     - added missing Class::Method::Modifiers dependency

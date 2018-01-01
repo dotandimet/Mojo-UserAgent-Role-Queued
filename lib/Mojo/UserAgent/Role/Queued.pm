@@ -5,19 +5,18 @@ use Scalar::Util 'weaken';
 our $VERSION = "0.03";
 
 has max_active => sub { shift->max_connections };
-has active         => 0;
 
 around start => sub {
   my ($orig, $self, $tx, $cb) = @_;
   if ($cb) {
-    $self->_start_queue($orig, {tx => $tx, cb => $cb});
+    $self->_enqueue($orig, {tx => $tx, cb => $cb});
   }
   else {
     return $orig->($self, $tx); # Blocking calls skip the queue
   }
 };
 
-sub _start_queue {
+sub _enqueue {
   my ($self, $original_start, $job) = @_;
   $self->{'jobs'} ||= [];
   push @{$self->{'jobs'}}, $job;
@@ -27,18 +26,18 @@ sub _start_queue {
 sub _process {
   my ($self, $original_start) = @_;
   state $start //= $original_start;
-
+  state $active //= 0;
   # we have jobs and can run them:
-  while ($self->active < $self->max_active
+  while ($active < $self->max_active
     and my $job = shift @{$self->{'jobs'}})
   {
     my ($tx, $cb) = ($job->{tx}, $job->{cb});
-    $self->active($self->active + 1);
+    $active++;
     weaken $self;
-    $tx->on(finish => sub { $self->active($self->active - 1)->_process() });
+    $tx->on(finish => sub { $active--; $self->_process() });
     $start->( $self, $tx, $cb );
   }
-  if (scalar @{$self->{'jobs'}} == 0 && $self->active == 0) {
+  if (scalar @{$self->{'jobs'}} == 0 && $active == 0) {
     $self->emit('stop_queue');
   }
 }
@@ -68,7 +67,13 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
                   $tx->res->dom->at('title')->text;
             }
            });
-   }
+   };
+   # works with promises, too:
+  my @p = map {
+    $ua->get_p($_)->then(sub { pop->res->dom->at('title')->text })
+      ->catch(sub { say "Error: ", @_ })
+  } @big_list_of_urls;
+   Mojo::Promise->all(@p)->wait;
  
 
 =head1 DESCRIPTION
@@ -99,12 +104,6 @@ Emitted when the queue has been emptied of all pending jobs.
 =head1 ATTRIBUTES
 
 L<Mojo::UserAgent::Role::Queued> has the following attributes:
-
-=head2 active
-
-    print "Number of jobs running is: ", $ua->active;
-
-Current number of active non-blocking transactions being processed.
 
 =head2 max_active
 
