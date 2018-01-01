@@ -21,11 +21,13 @@ sub _start_queue {
   my ($self, $original_start, $job) = @_;
   $self->{'jobs'} ||= [];
   push @{$self->{'jobs'}}, $job;
-  my $this = $self;
-  weaken $this;
-  my $orig = $original_start;
-  weaken $orig;
-  $self->{'timer'} = Mojo::IOLoop->recurring(0 => sub { $this->_process($orig); });
+  unless ($self->{'timer'}) {
+      my $this = $self;
+      weaken $this;
+      my $orig = $original_start;
+      weaken $orig;
+      $self->{'timer'} = Mojo::IOLoop->recurring(0 => sub { $this->_process($orig); });
+  }
 }
 
 sub _stop_queue {
