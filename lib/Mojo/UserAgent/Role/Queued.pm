@@ -2,7 +2,7 @@ package Mojo::UserAgent::Role::Queued;
 use Mojo::Base '-role';
 use Scalar::Util 'weaken';
 
-our $VERSION = "0.02";
+our $VERSION = "0.03";
 
 has max_active => sub { shift->max_connections };
 has active         => 0;

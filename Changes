@@ -2,6 +2,8 @@ Revision history for Perl extension Mojo-UserAgent-Role-Queued
 
 {{$NEXT}}
 
+0.03 2018-01-01T14:07:28Z
+
     - added missing Class::Method::Modifiers dependency
     - fix bug where more than one timer was created
 
