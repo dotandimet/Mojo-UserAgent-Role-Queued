@@ -21,22 +21,7 @@ sub _start_queue {
   my ($self, $original_start, $job) = @_;
   $self->{'jobs'} ||= [];
   push @{$self->{'jobs'}}, $job;
-  unless ($self->{'timer'}) {
-      my $this = $self;
-      weaken $this;
-      my $orig = $original_start;
-      weaken $orig;
-      $self->{'timer'} = Mojo::IOLoop->recurring(0 => sub { $this->_process($orig); });
-  }
-}
-
-sub _stop_queue {
-  my ($self) = @_;
-  if ($self->{'timer'}) {
-    Mojo::IOLoop->remove($self->{'timer'});
-    $self->{'timer'} = undef;
-  }
-  return $self;
+  $self->_process($original_start);
 }
 
 sub _process {
@@ -49,24 +34,14 @@ sub _process {
   {
     my ($tx, $cb) = ($job->{tx}, $job->{cb});
     $self->active($self->active + 1);
-    $start->( $self, $tx,
-              sub {
-                    my ($ua, $tx1) = @_;
-                    $ua->active($ua->active - 1);
-                    $cb->($ua, $tx1);
-                    $ua->_process();
-        });
+    weaken $self;
+    $tx->on(finish => sub { $self->active($self->active - 1)->_process() });
+    $start->( $self, $tx, $cb );
   }
   if (scalar @{$self->{'jobs'}} == 0 && $self->active == 0) {
     $self->emit('stop_queue');
-    $self->_stop_queue();    # the timer shouldn't run STAM.
   }
 }
-
-before DESTROY => sub {
-  my ($self) = shift;
-  $self->_stop_queue();
-};
 
 
 1;
