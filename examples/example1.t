@@ -13,8 +13,8 @@ sub get_reviews_and_favs {
   my $tx  = pop;
   my $rev = $tx->res->dom->at('span[itemprop=reviewCount]');
   $reviews{$tx->req->url} = ($rev) ? $rev->text : 0;
-  my $fav = $tx->res->dom->at('button.favorite span')->text;
-  $favorites{$tx->req->url} = ($fav) ? $fav : 0;
+  my $fav = $tx->res->dom->at('button.favorite span');
+  $favorites{$tx->req->url} = ($fav && $fav->text ne '') ? $fav->text : 0;
 }
 
 $ua->get_p($search)->then(
