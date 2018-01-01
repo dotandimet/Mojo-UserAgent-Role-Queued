@@ -42,6 +42,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Class::Method::Modifiers" : "2.12",
             "Mojolicious" : "7.52",
             "Role::Tiny" : "2.000001",
             "perl" : "5.008001"
