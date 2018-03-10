@@ -56,7 +56,7 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
 
     use Mojo::UserAgent;
 
-    my $ua = Mojo::UserAgent->new->with_role('+Queued');
+    my $ua = Mojo::UserAgent->new->with_roles('+Queued');
     $ua->max_redirects(3);
     $ua->max_active(5); # process up to 5 requests at a time
     for my $url (@big_list_of_urls) {
