@@ -6,24 +6,10 @@ our $VERSION = "0.04";
 
 has max_active => sub { shift->max_connections };
 
-around start => sub {
-  my ($orig, $self, $tx, $cb) = @_;
-  if ($cb) {
-    $self->_enqueue($orig, {tx => $tx, cb => $cb});
-  }
-  else {
-    return $orig->($self, $tx); # Blocking calls skip the queue
-  }
-};
+# Private methods:
 
-sub _enqueue {
-  my ($self, $original_start, $job) = @_;
-  $self->{'jobs'} ||= [];
-  push @{$self->{'jobs'}}, $job;
-  $self->_process($original_start);
-}
-
-sub _process {
+my $_process_queue;
+$_process_queue = sub {
   my ($self, $original_start) = @_;
   state $start //= $original_start;
   state $active //= 0;
@@ -34,13 +20,31 @@ sub _process {
     my ($tx, $cb) = ($job->{tx}, $job->{cb});
     $active++;
     weaken $self;
-    $tx->on(finish => sub { $active--; $self->_process() });
+    $tx->on(finish => sub { $active--; $self->$_process_queue() });
     $start->( $self, $tx, $cb );
   }
   if (scalar @{$self->{'jobs'}} == 0 && $active == 0) {
     $self->emit('stop_queue');
   }
-}
+};
+
+my $_enqueue = sub {
+  my ($self, $original_start, $job) = @_;
+  $self->{'jobs'} ||= [];
+  push @{$self->{'jobs'}}, $job;
+  $self->$_process_queue($original_start);
+};
+
+
+around start => sub {
+  my ($orig, $self, $tx, $cb) = @_;
+  if ($cb) {
+    $self->$_enqueue($orig, {tx => $tx, cb => $cb});
+  }
+  else {
+    return $orig->($self, $tx); # Blocking calls skip the queue
+  }
+};
 
 
 1;
