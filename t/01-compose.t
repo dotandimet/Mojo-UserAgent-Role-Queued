@@ -48,7 +48,7 @@ for my $d (1 .. 4) {
     }
   );
 }
-$ua->on('stop_queue' => sub { Mojo::IOLoop->stop });
+$ua->on('queue_empty' => sub { Mojo::IOLoop->stop });
 Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
 # What about promises?

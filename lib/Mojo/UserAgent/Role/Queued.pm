@@ -2,7 +2,7 @@ package Mojo::UserAgent::Role::Queued;
 use Mojo::Base '-role';
 use Scalar::Util 'weaken';
 
-our $VERSION = "0.04";
+our $VERSION = "1.0";
 
 has max_active => sub { shift->max_connections };
 
@@ -24,7 +24,7 @@ $_process_queue = sub {
     $start->( $self, $tx, $cb );
   }
   if (scalar @{$self->{'jobs'}} == 0 && $active == 0) {
-    $self->emit('stop_queue');
+    $self->emit('queue_empty');
   }
 };
 
@@ -84,8 +84,6 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
 
 Mojo::UserAgent::Role::Queued manages all non-blocking requests made through L<Mojo::UserAgent> in a queue to limit the number of simultaneous requests.
 
-B<THIS IS AN INITIAL RELEASE>.
-
 L<Mojo::UserAgent> can make multiple concurrent non-blocking HTTP requests using Mojo's event loop, but because there is only a single process handling all of them, you must take care to limit the number of simultaneous requests you make.
 
 Some discussion of this issue is available here
@@ -99,11 +97,11 @@ L<Mojo::UserAgent::Role::Queued> tries to generalize the practice of managing a 
 
 L<Mojo::UserAgent::Role::Queued> adds the following event to those emitted by L<Mojo::UserAgent>:
 
-=head2 stop_queue
+=head2 queue_empty
 
-  $ua->on(stop_queue => sub { my ($ua) = @_; .... })
+  $ua->on(queue_empty => sub { my ($ua) = @_; .... })
 
-Emitted when the queue has been emptied of all pending jobs.
+Emitted when the queue has been emptied of all pending jobs. In previous releases, this event was called C<stop_queue> (B<this is a breaking change>).
 
 =head1 ATTRIBUTES
 
