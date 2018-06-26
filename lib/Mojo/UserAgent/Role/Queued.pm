@@ -8,9 +8,8 @@ has max_active => sub { shift->max_connections };
 
 # Private methods:
 
-my $_process_queue;
-$_process_queue = sub {
-  my ($self, $original_start) = @_;
+my $_process_queue = sub {
+  my ($self, $original_start, $ref_to_this_sub) = @_;
   state $start //= $original_start;
   state $active //= 0;
   # we have jobs and can run them:
@@ -20,7 +19,7 @@ $_process_queue = sub {
     my ($tx, $cb) = ($job->{tx}, $job->{cb});
     $active++;
     weaken $self;
-    $tx->on(finish => sub { $active--; $self->$_process_queue() });
+    $tx->on(finish => sub { $active--; $self->$ref_to_this_sub() });
     $start->( $self, $tx, $cb );
   }
   if (scalar @{$self->{'jobs'}} == 0 && $active == 0) {
@@ -32,7 +31,7 @@ my $_enqueue = sub {
   my ($self, $original_start, $job) = @_;
   $self->{'jobs'} ||= [];
   push @{$self->{'jobs'}}, $job;
-  $self->$_process_queue($original_start);
+  $self->$_process_queue($original_start, $_process_queue);
 };
 
 
