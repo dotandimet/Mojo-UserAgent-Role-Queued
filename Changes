@@ -1,6 +1,8 @@
 Revision history for Perl extension Mojo-UserAgent-Role-Queued
 
 {{$NEXT}}
+
+1.01 2018-06-26T15:33:43Z
     - use non-leaking version of private callback method
     - restore typo fix in synopsis (Dan book)
 
