@@ -2,43 +2,17 @@ package Mojo::UserAgent::Role::Queued;
 use Mojo::Base '-role';
 use Scalar::Util 'weaken';
 
+use Mojo::UserAgent::Role::Queued::Queue;
+
 our $VERSION = "1.0";
 
 has max_active => sub { shift->max_connections };
 
-# Private methods:
-
-my $_process_queue = sub {
-  my ($self, $original_start, $ref_to_this_sub) = @_;
-  state $start //= $original_start;
-  state $active //= 0;
-  # we have jobs and can run them:
-  while ($active < $self->max_active
-    and my $job = shift @{$self->{'jobs'}})
-  {
-    my ($tx, $cb) = ($job->{tx}, $job->{cb});
-    $active++;
-    weaken $self;
-    $tx->on(finish => sub { $active--; $self->$ref_to_this_sub() });
-    $start->( $self, $tx, $cb );
-  }
-  if (scalar @{$self->{'jobs'}} == 0 && $active == 0) {
-    $self->emit('queue_empty');
-  }
-};
-
-my $_enqueue = sub {
-  my ($self, $original_start, $job) = @_;
-  $self->{'jobs'} ||= [];
-  push @{$self->{'jobs'}}, $job;
-  $self->$_process_queue($original_start, $_process_queue);
-};
-
-
 around start => sub {
   my ($orig, $self, $tx, $cb) = @_;
+  state $queue //= Mojo::UserAgent::Role::Queued::Queue->new(max_active => $self->max_active, original_method => $orig);
   if ($cb) {
-    $self->$_enqueue($orig, {tx => $tx, cb => $cb});
+    $queue->enqueue({tx => $tx, cb => $cb});
   }
   else {
     return $orig->($self, $tx); # Blocking calls skip the queue
