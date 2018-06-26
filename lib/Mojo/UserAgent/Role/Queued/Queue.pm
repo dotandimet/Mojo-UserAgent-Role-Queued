@@ -8,7 +8,7 @@ use Mojo::Base 'Mojo::EventEmitter';
 has jobs => sub { [] };
 has active => 0;
 has max_active => 4;
-has original_method => sub { return sub { die "No Method set!"; } };
+has callback => sub { return sub { die "No Method set!"; } };
 
 
 sub process {
@@ -17,15 +17,18 @@ sub process {
   while ($self->active < $self->max_active
     and my $job = shift @{$self->jobs})
   {
-    my ($tx, $cb) = ($job->{tx}, $job->{cb});
     $self->active($self->active + 1);
-    weaken $self;
-    $tx->on(finish => sub { $self->active($self->active - 1); $self->process() });
-    $self->original_method->( $self, $tx, $cb );
+    $self->callback->( @$job );
   }
   if (scalar @{$self->jobs} == 0 && $self->active == 0) {
     $self->emit('queue_empty');
   }
+}
+
+sub tx_finish {
+    my ($self) = @_;
+    $self->active($self->active - 1);
+    $self->process();
 }
 
 sub enqueue {
