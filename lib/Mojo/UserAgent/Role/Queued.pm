@@ -10,12 +10,17 @@ has max_active => sub { shift->max_connections };
 
 around start => sub {
   my ($orig, $self, $tx, $cb) = @_;
-  state $queue //= Mojo::UserAgent::Role::Queued::Queue->new(max_active => $self->max_active, original_method => $orig);
+  state $queue //= Mojo::UserAgent::Role::Queued::Queue->new(
+    max_active => $self->max_active,
+    callback   => sub { $self->$orig(@_); }
+  );
   if ($cb) {
-    $queue->enqueue({tx => $tx, cb => $cb});
+    $tx->on(finish => sub { $queue->tx_finish(); });
+    $queue->on( queue_empty => sub { $self->emit('queue_empty') });
+    $queue->enqueue([$tx, $cb]);
   }
   else {
-    return $orig->($self, $tx); # Blocking calls skip the queue
+    return $orig->($self, $tx);    # Blocking calls skip the queue
   }
 };
 
