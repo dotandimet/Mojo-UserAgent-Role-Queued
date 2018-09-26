@@ -6,6 +6,7 @@ BEGIN {
   if (RELEASE_TESTING) {
     require Test::Memory::Cycle;
     Test::Memory::Cycle->import();
+    $SIG{'__WARN__'} = sub { warn $_[0] unless ($_[0] =~ /Unhandled type: (GLOB|REGEXP)/); };
   }
   else {
     plan skip_all => 'test for memory leaks';
@@ -34,7 +35,7 @@ for my $name (qw(fred barney wilma peebles bambam dino)) {
   @tests_p
     = $ua->get_p("/$name")->then(sub { shift->res->content eq "Hello $name" });
 }
-memory_cycle_ok($ua);
+memory_cycle_ok($ua, 'no cycles in UserAgent object');
 
 Mojo::Promise->all(@tests_p)->wait;
 
