@@ -5,6 +5,5 @@ requires 'Class::Method::Modifiers', '2.12';
 
 on 'test' => sub {
     requires 'Test::More', '0.98';
-    requires 'Test::Memory::Cycle', '1.06';
 };
 

@@ -1,16 +1,16 @@
 use Mojo::Base -strict;
 use Test::More;
-use constant RELEASE_TESTING => $ENV{RELEASE_TESTING};
 
-BEGIN {
-  if (RELEASE_TESTING) {
-    require Test::Memory::Cycle;
-    Test::Memory::Cycle->import();
-    $SIG{'__WARN__'} = sub { warn $_[0] unless ($_[0] =~ /Unhandled type: (GLOB|REGEXP)/); };
-  }
-  else {
-    plan skip_all => 'test for memory leaks';
-  }
+use constant CAN_TEST_LEAKS => (eval { require Test::Memory::Cycle; })
+  ? 1
+  : undef;
+if (CAN_TEST_LEAKS) {
+  Test::Memory::Cycle->import();
+  $SIG{'__WARN__'}
+    = sub { warn $_[0] unless ($_[0] =~ /Unhandled type: (GLOB|REGEXP)/); };
+}
+else {
+  plan skip_all => 'test for memory leaks';
 }
 
 use Mojo::UserAgent;
