@@ -3,8 +3,7 @@ use Test::More;
 use Mojo::UserAgent;
 use Mojo::Promise;
 
-use constant HAS_SSL => (eval { require IO::Socket::SSL; });
-plan skip_all => "Test requires IO::Socket::SSL" unless (HAS_SSL);
+plan skip_all => "Test requires IO::Socket::SSL 2.009+" unless(Mojo::IOLoop::TLS->can_tls);
 
 # test that ua isn't acting as a singleton when this role is applied,
 # based on examples/tyldum.pl (from github issue #4)
