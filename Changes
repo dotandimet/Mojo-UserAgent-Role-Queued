@@ -2,6 +2,8 @@ Revision history for Perl extension Mojo-UserAgent-Role-Queued
 
 {{$NEXT}}
 
+1.14 2018-10-07T15:44:25Z
+
     - rename queue attribute to job_queue (prevent clash with Mojo::UA->{queue})
     - (try to) fix memory leaks (thanks to Vidar Tyldum)
     - prevent test failures (thanks to CPAN Testers)
