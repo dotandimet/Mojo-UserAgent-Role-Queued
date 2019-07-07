@@ -1,4 +1,5 @@
 name = "Mojo-UserAgent-Role-Queued"
 badges = ["travis", "metacpan"]
 module_maker="ModuleBuildTiny"
+license="artistic_2"
 

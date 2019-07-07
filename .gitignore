@@ -29,3 +29,6 @@ cover_db/
 MYMETA.*
 
 /Mojo-UserAgent-Role-Queued-*
+/.build
+!Build/
+!META.json
