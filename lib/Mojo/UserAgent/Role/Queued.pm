@@ -50,7 +50,7 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
     for my $url (@big_list_of_urls) {
     $ua->get($url, sub {
             my ($ua, $tx) = @_;
-            if ($tx->success) {
+            if (! $tx->error) {
                 say "Page at $url is titled: ",
                   $tx->res->dom->at('title')->text;
             }

@@ -12,7 +12,7 @@ for my $url (@big_list_of_urls) {
     $url,
     sub {
       my ($ua, $tx) = @_;
-      if ($tx->success) {
+      if (! $tx->error) {
         say "Page at $url is titled: ", $tx->res->dom->at('title')->text;
       }
     }
