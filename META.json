@@ -1,7 +1,7 @@
 {
    "abstract" : "A role to process non-blocking requests in a rate-limiting queue.",
    "author" : [
-      "Dotan Dimet <dotan@corky.net>"
+      "-2019 by Dotan Dimet <dotan@corky.net>."
    ],
    "dynamic_config" : 0,
    "generated_by" : "Minilla/v3.1.4, CPAN::Meta::Converter version 2.150010",

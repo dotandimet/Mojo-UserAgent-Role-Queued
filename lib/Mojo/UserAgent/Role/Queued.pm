@@ -100,9 +100,10 @@ Parameter controlling the maximum number of transactions that can be active at t
 
 =head2 
 
-=head1 LICENSE
+=head1 LICENSE AND COPYRIGHT
 
-Copyright (C) Dotan Dimet.
+This software is Copyright (c) 2017-2019 by Dotan Dimet E<lt>dotan@corky.netE<gt>.
+
 
 This library is free software; you can redistribute it and/or modify
 it under the terms of the Artistic License version 2.0.

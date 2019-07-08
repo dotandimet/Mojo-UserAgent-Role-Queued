@@ -63,12 +63,12 @@ Parameter controlling the maximum number of transactions that can be active at t
 
 ## 
 
-# LICENSE
+# LICENSE AND COPYRIGHT
 
-Copyright (C) Dotan Dimet.
+This software is Copyright (c) 2017-2019 by Dotan Dimet <dotan@corky.net>.
 
 This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+it under the terms of the Artistic License version 2.0.
 
 # AUTHOR
 
