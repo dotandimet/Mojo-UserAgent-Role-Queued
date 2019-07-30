@@ -3,7 +3,7 @@ use Mojo::Base '-role';
 
 # use Mojo::Util qw(deprecated);
 
-our $VERSION = "1.15";
+our $VERSION = "1.20";
 use Mojo::UserAgent::Role::Queued::Queue;
 
 sub max_active {
