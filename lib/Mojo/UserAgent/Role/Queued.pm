@@ -1,20 +1,30 @@
 package Mojo::UserAgent::Role::Queued;
 use Mojo::Base '-role';
 
+# use Mojo::Util qw(deprecated);
+
 our $VERSION = "1.15";
 use Mojo::UserAgent::Role::Queued::Queue;
 
-has max_active => sub { shift->max_connections };
+sub max_active {
+
+#     deprecated
+# q{$ua->max_active is deprecated in favor of $ua->request_queue->concurrency};
+  shift->request_queue->concurrency(@_);
+}
 
 has request_queue => sub {
-  Mojo::UserAgent::Role::Queued::Queue->new(concurrency => $_[0]->max_active, ua => $_[0]);
+  Mojo::UserAgent::Role::Queued::Queue->new(
+    concurrency => $_[0]->max_connections,
+    ua          => $_[0]
+  );
 };
 
 around start => sub {
   my ($ua_start, $self, $tx, $cb) = @_;
   if ($cb) {
     unless ($self->request_queue->start) {
-        $self->request_queue->start($ua_start);
+      $self->request_queue->start($ua_start);
     }
     $self->request_queue->enqueue($tx, $cb);
   }
@@ -22,7 +32,6 @@ around start => sub {
     return $ua_start->($self, $tx);    # Blocking calls skip the queue
   }
 };
-
 
 1;
 __END__
