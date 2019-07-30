@@ -1,31 +1,25 @@
 package Mojo::UserAgent::Role::Queued::Queue;
-
-use strict;
-use warnings;
-
-use Mojo::Base 'Mojo::EventEmitter';
+use Mojo::Base -base;
 
 has jobs => sub { [] };
 has active => 0;
-has max_active => 4;
-has callback => undef;
+has concurrency => 4;
+has start => undef, weak => 1;
+has ua => undef, weak => 1;
 
 
 sub process {
    my ($self) = @_;
   # we have jobs and can run them:
-  while ($self->active < $self->max_active
-    and my $job = shift @{$self->jobs})
+  while ( $self->active < $self->concurrency
+          and not $self->is_empty )
   {
     $self->active($self->active + 1);
-    my $tx = shift @$job;
-    my $cb = shift @$job;
-    weaken $self;
-    $tx->on(finish => sub { $self->tx_finish(); });
-    $self->callback->( $tx, $cb );
+    my ($tx, $cb) = $self->dequeue();
+    $self->start->($self->ua, $tx, $cb );
   }
-  if (scalar @{$self->jobs} == 0 && $self->active == 0) {
-    $self->emit('queue_empty');
+  if ($self->is_empty && $self->active == 0) {
+    $self->ua->emit('queue_empty');
   }
 }
 
@@ -40,6 +34,19 @@ sub enqueue {
     my $job = [$tx, $cb];
     push @{$self->jobs}, $job;
     $self->process();
+}
+
+sub dequeue {
+    my ($self) = @_;
+    my $job = shift @{$self->jobs};
+    my $tx = shift @$job;
+    my $cb = shift @$job;
+    $tx->on(finish => sub { $self->tx_finish(); });
+    return ($tx, $cb);
+}
+
+sub is_empty {
+    return @{$_[0]->jobs} == 0;
 }
 
 1;

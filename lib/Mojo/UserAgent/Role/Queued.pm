@@ -6,27 +6,20 @@ use Mojo::UserAgent::Role::Queued::Queue;
 
 has max_active => sub { shift->max_connections };
 
-has job_queue => sub {
-  Mojo::UserAgent::Role::Queued::Queue->new(max_active => shift->max_active);
+has request_queue => sub {
+  Mojo::UserAgent::Role::Queued::Queue->new(concurrency => $_[0]->max_active, ua => $_[0]);
 };
 
 around start => sub {
-  my ($orig, $self, $tx, $cb) = @_;
+  my ($ua_start, $self, $tx, $cb) = @_;
   if ($cb) {
-    unless ($self->job_queue->callback) {
-        my $this = $self;
-        weaken $this;
-        $self->job_queue->callback(sub { $this->$orig(@_) });
+    unless ($self->request_queue->start) {
+        $self->request_queue->start($ua_start);
     }
-    unless ($self->job_queue->has_subscribers('queue_empty')) {
-        my $this = $self;
-        weaken $this;
-        $self->job_queue->on(queue_empty => sub { $this->emit('queue_empty') });
-    }
-    $self->job_queue->enqueue($tx, $cb);
+    $self->request_queue->enqueue($tx, $cb);
   }
   else {
-    return $orig->($self, $tx);    # Blocking calls skip the queue
+    return $ua_start->($self, $tx);    # Blocking calls skip the queue
   }
 };
 
@@ -56,6 +49,8 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
             }
            });
    };
+   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+  
    # works with promises, too:
   my @p = map {
     $ua->get_p($_)->then(sub { pop->res->dom->at('title')->text })
@@ -77,16 +72,6 @@ L<http://stackoverflow.com/questions/15152633/perl-mojo-and-json-for-simultaneou
 
 L<Mojo::UserAgent::Role::Queued> tries to generalize the practice of managing a large number of requests using a queue, by embedding the queue inside L<Mojo::UserAgent> itself.
 
-=head1 EVENTS
-
-L<Mojo::UserAgent::Role::Queued> adds the following event to those emitted by L<Mojo::UserAgent>:
-
-=head2 queue_empty
-
-  $ua->on(queue_empty => sub { my ($ua) = @_; .... })
-
-Emitted when the queue has been emptied of all pending jobs. In previous releases, this event was called C<stop_queue> (B<this is a breaking change>).
-
 =head1 ATTRIBUTES
 
 L<Mojo::UserAgent::Role::Queued> has the following attributes:
@@ -97,6 +82,17 @@ L<Mojo::UserAgent::Role::Queued> has the following attributes:
     print "Execute no more than ", $ua->max_active, " concurrent transactions"
 
 Parameter controlling the maximum number of transactions that can be active at the same time.
+
+=head1 EVENTS
+
+L<Mojo::UserAgent::Role::Queued> adds the following event to those emitted by L<Mojo::UserAgent>:
+
+=head2 queue_empty
+
+  $ua->on(queue_empty => sub { my ($ua) = @_; .... })
+
+Emitted when the queue has been emptied of all pending jobs. In previous releases, this event was called C<stop_queue> (B<this is a breaking change>).
+
 
 =head2 
 
