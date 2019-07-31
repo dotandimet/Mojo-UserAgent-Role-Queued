@@ -59,7 +59,7 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
            });
    };
    Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
-  
+
    # works with promises, too:
   my @p = map {
     $ua->get_p($_)->then(sub { pop->res->dom->at('title')->text })

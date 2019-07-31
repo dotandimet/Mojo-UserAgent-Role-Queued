@@ -13,12 +13,14 @@ Mojo::UserAgent::Role::Queued - A role to process non-blocking requests in a rat
        for my $url (@big_list_of_urls) {
        $ua->get($url, sub {
                my ($ua, $tx) = @_;
-               if ($tx->success) {
+               if (! $tx->error) {
                    say "Page at $url is titled: ",
                      $tx->res->dom->at('title')->text;
                }
               });
       };
+      Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
       # works with promises, too:
      my @p = map {
        $ua->get_p($_)->then(sub { pop->res->dom->at('title')->text })
@@ -40,16 +42,6 @@ and in Joel Berger's answer here:
 
 [Mojo::UserAgent::Role::Queued](https://metacpan.org/pod/Mojo::UserAgent::Role::Queued) tries to generalize the practice of managing a large number of requests using a queue, by embedding the queue inside [Mojo::UserAgent](https://metacpan.org/pod/Mojo::UserAgent) itself.
 
-# EVENTS
-
-[Mojo::UserAgent::Role::Queued](https://metacpan.org/pod/Mojo::UserAgent::Role::Queued) adds the following event to those emitted by [Mojo::UserAgent](https://metacpan.org/pod/Mojo::UserAgent):
-
-## queue\_empty
-
-    $ua->on(queue_empty => sub { my ($ua) = @_; .... })
-
-Emitted when the queue has been emptied of all pending jobs. In previous releases, this event was called `stop_queue` (**this is a breaking change**).
-
 # ATTRIBUTES
 
 [Mojo::UserAgent::Role::Queued](https://metacpan.org/pod/Mojo::UserAgent::Role::Queued) has the following attributes:
@@ -60,6 +52,16 @@ Emitted when the queue has been emptied of all pending jobs. In previous release
     print "Execute no more than ", $ua->max_active, " concurrent transactions"
 
 Parameter controlling the maximum number of transactions that can be active at the same time.
+
+# EVENTS
+
+[Mojo::UserAgent::Role::Queued](https://metacpan.org/pod/Mojo::UserAgent::Role::Queued) adds the following event to those emitted by [Mojo::UserAgent](https://metacpan.org/pod/Mojo::UserAgent):
+
+## queue\_empty
+
+    $ua->on(queue_empty => sub { my ($ua) = @_; .... })
+
+Emitted when the queue has been emptied of all pending jobs. In previous releases, this event was called `stop_queue` (**this is a breaking change**).
 
 ## 
 
