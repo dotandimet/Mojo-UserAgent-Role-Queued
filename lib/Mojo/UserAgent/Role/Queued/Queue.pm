@@ -1,5 +1,6 @@
 package Mojo::UserAgent::Role::Queued::Queue;
 use Mojo::Base -base;
+use Scalar::Util qw(weaken);
 
 has jobs        => sub { [] };
 has active      => 0;
@@ -40,6 +41,7 @@ sub dequeue {
   my $job    = shift @{$self->jobs};
   my $tx     = shift @$job;
   my $cb     = shift @$job;
+  weaken $self;
   $tx->on(finish => sub { $self->tx_finish(); });
   return ($tx, $cb);
 }
